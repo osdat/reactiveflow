@@ -1,0 +1,34 @@
+{
+  "name": "reactiveflow",
+  "version": "0.1.0",
+  "description": "a reactive dataflow library inspired by RStudio's Shiny framework",
+  "main": "reactiveflow.js",
+  "scripts": {
+    "test": "jasmine",
+    "build": "uglifyjs reactiveflow.js -c \"evaluate=false\" -m --source-map reactiveflow-min.map -o reactiveflow-min.js"
+  },
+  "author": "Joshua Ainslie",
+  "license": "MIT",
+  "devDependencies": {
+    "jasmine": "^2.4.1",
+    "uglify-js": "^2.6.1"
+  },
+  "files": [
+    "reactiveflow.js",
+    "reactiveflow-min.js",
+    "reactiveflow-min.map"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/osdat/reactiveflow.git"
+  },
+  "keywords": [
+    "reactive",
+    "dataflow",
+    "shiny"
+  ],
+  "bugs": {
+    "url": "https://github.com/osdat/reactiveflow/issues"
+  },
+  "homepage": "https://github.com/osdat/reactiveflow"
+}

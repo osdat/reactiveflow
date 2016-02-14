@@ -1,0 +1,22 @@
+
+/*
+ * Example DAG for unit tests
+ * Use the following to output PNG file:
+ * dot -Tpng test_example.dot -o test_example.png
+ */
+
+ digraph {
+   s1 [shape=invhouse]
+   s2 [shape=invhouse]
+   s3 [shape=invhouse]
+
+   s1 -> a1 -> {b1 b2}
+   s2 -> a2 -> a3 -> b2
+   s2 -> a1 [style=dashed, color=gray50]
+   s3 -> {a3 b3}
+   a3 -> {b1 b3} [style=dashed, color=gray50]
+
+   { rank=same; s1 s2 s3 }
+   { rank=same; a1 a2 }
+   { rank=same; b1 -> b2 -> b3 [style=invis] }
+ }
