@@ -1,0 +1,9 @@
+digraph {
+  rawFirstName [shape=invhouse]
+  format [shape=invhouse]
+  rawLastName [shape=invhouse]
+
+  rawFirstName -> firstName -> fullName
+  format -> {firstName lastName} [style=dashed, color=gray50]
+  rawLastName -> lastName -> fullName
+}
