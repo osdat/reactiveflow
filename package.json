@@ -1,6 +1,6 @@
 {
   "name": "reactiveflow",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "a reactive dataflow library inspired by RStudio's Shiny framework",
   "main": "reactiveflow.js",
   "scripts": {
