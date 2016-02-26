@@ -16,6 +16,8 @@
 
   var reactiveflow = exports;
 
+  reactiveflow.version = '0.1.1';
+
 
   /* ==========================================================================
    * Define prototypes (instead of constructor functions)

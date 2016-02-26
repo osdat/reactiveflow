@@ -218,7 +218,7 @@ describe("A reactiveflow context", function() {
 
         beforeEach(function() {
           updateObj = {};
-          updateObj.func = function(args, currVal, updateMap) {
+          updateObj.func = function(args, currVal, updateMap, node) {
             // Sum all arguments
             var result = 0;
             for (var id in args) {
@@ -238,7 +238,11 @@ describe("A reactiveflow context", function() {
             expect(updateObj.func).toHaveBeenCalled();
             expect(conduit.getValue()).toBe(3);
             var updateFuncArgs = updateObj.func.calls.mostRecent().args;
+
+            // args should be a "clean map" (i.e. inheriting from null)
+            expect(Object.getPrototypeOf(updateFuncArgs[0])).toBe(null);
             expect(updateFuncArgs[1]).toBeUndefined();
+            // updateMap should be a "clean map" (i.e. inheriting from null)
             expect(updateFuncArgs[2]).toEqual(Object.create(null));
             expect(updateFuncArgs[3]).toBe(conduit);
           }
@@ -636,6 +640,13 @@ describe("Update behavior for a 'triggerUpdate' call:", function() {
         }).toThrowError(/context/);
       }
     );
+  });
+});
+
+
+describe("The reactiveflow version", function() {
+  it("is a string property", function() {
+    expect(typeof reactiveflow.version).toBe('string');
   });
 });
 
