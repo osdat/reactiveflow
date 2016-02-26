@@ -111,7 +111,7 @@ the id it's constructed with.
 This isn't strictly necessary, but it's
 highly recommended for consistency since reactiveflow contexts have no
 knowledge of the var names.  The `args` properties passed to each conduit's
-`updateFunc` is based on the node ids.
+`updateFunc` are based on the node ids.
 * The call to <code>context.newConduit(id,&nbsp;configOpts,&nbsp;updateFunc)</code>
 requires `configOpts` to have an `args` property specifying which nodes the
 conduit is dependent on.  `configOpts` can optionally have an `initVal`
@@ -299,6 +299,154 @@ value, it prevents an update in this case and therefore prevents
 notification of any of its listeners.
 
 This concludes our tour of the primary features of reactiveflow.
+
+
+# API Reference
+
+By convention, when a *clean map* is mentioned we mean an object created with
+`Object.create(null)`.  Such an object has no inherited properties,
+so `Object.keys(obj)`, `for (key in obj)` loops, and `key in obj` tests
+all work without requiring `hasOwnProperty()`.
+
+All properties that begin with an underscore (e.g. `context._privateProp`)
+should be considered private implementation details.
+
+reactiveflow.**version**
+
+* The reactiveflow version string
+
+## context
+
+reactiveflow.**newContext**()
+
+* Constructs a new context
+
+context.**hasId**(*id*)
+
+* Returns true if and only if the context has a node with the given *id*
+
+context.**nodes**
+
+* A *clean map* from all of the context's node ids to its nodes.  This
+property and all of its entries should be treated as read-only.
+
+context.**triggerUpdate**(*sources*, *newValues*)
+
+* Triggers a simultaneous update for the array of *sources* to
+take on the respective array of *newValues*.  The *sources* array may
+contain either source nodes or their id strings.
+* Updates will propagate recursively to dependent conduits, but no node will
+update more than once in a single `context.triggerUpdate` call.
+* Before any conduit is triggered to call its updateFunc, all the nodes
+it depends on (including passive arguments) are guaranteed to have already
+been updated if they are going to be triggered at all.
+(This is accomplished via a topological sort of the dependency graph.)
+* All listeners for updated nodes are triggered in batch after all nodes
+have already been updated.
+* It is an error to make another `triggerUpdate` call while an update
+is already in progress.  This means none of the updateFuncs or listeners
+are allowed to directly trigger updates in the same context they're in.
+One workaround could be to use `setTimeout`, but the possibility of infinite
+loops may be a concern.
+
+context.**triggerUpdate**(*sourceMap*)
+
+* A variation of the method above that takes a *sourceMap* from source node
+ids to their new values
+* e.g. `context.triggerUpdate({source1: 'val1', source2: 'val2'})`
+
+## node
+
+node.**getValue**()
+
+* Returns the node's current value
+
+node.**id**
+
+* The unique string id of the node.  Treat as read-only.
+
+node.**context**
+
+* The context this node belongs to.  Treat as read-only.
+
+node.**addListener**(*listener*)
+
+* Adds a listener that will be called whenever this node is updated
+* signature: **listener**(*value*, *node*)
+  * `value` is the newly updated value of the node
+  * `node` is a reference to the node itself
+
+node.**removeListener**(*listener*)
+
+* Removes the specified listener from this node.  Only one instance of the
+listener is removed if it was added multiple times.
+
+node.**removeAllListeners**()
+
+* Removes all listeners from the node
+
+node.**listenerCount**()
+
+* Returns the number of listeners on this node
+
+## source
+
+context.**newSource**(*id*, *initVal*)
+
+* Creates a new source node with *initVal* as the
+initial value.  The context must not already have a node with
+the given *id*.
+
+source.**triggerUpdate**(*newValue*)
+
+* Triggers an update for the source, propagating to its descendants.
+This is equivalent to calling
+<code>context.triggerUpdate([source],&nbsp;[newValue])</code>
+
+## conduit
+
+context.**newConduit**(*id*, *configOpts*, *updateFunc*)
+
+* Creates a new conduit node.  The context must not already have a
+node with the given *id*.
+* *configOpts* must be an object with only the following possible properties:
+  * `args` is a mandatory property defining which nodes the conduit is
+  dependent on to trigger it to update.
+  *args* should consist of an array of "items", where
+  each item is either a node, a node id, or a map from aliases to nodes
+  or node ids.  If only one item is present, it does not need to be wrapped
+  within an array.  Here are a bunch of valid example `args`:
+    * `[node1, node2]`
+    * `['node1', 'node2']`
+    * `'node1'`
+    * `[{alias: node1}, node2]`
+    * `{alias1: 'node1', alias2: 'node2'}`
+  * `pArgs` is an optional property defining passive arguments the conduit
+  receives in its *updateFunc* but is not triggered to update by.  It
+  is specified in the same possible ways as *args*.  The set of all nodes and
+  aliases specified by *args* and *pArgs* must be unique.  (A node can't
+  be both in *args* and *pArgs* for the same conduit.)
+  * `initVal` is an optional property specifying the initial value
+  of the conduit.  If it isn't specified, *updateFunc* is called to compute
+  the initial value instead.  This initial call will have *currVal* set
+  to `null` and *updateMap* empty.  (See the *updateFunc* signature below.)
+* *updateFunc* is the function that's called to compute the conduit's new
+value whenever it's triggered to update.  Having *updateFunc* return
+`undefined` will prevent the conduit from updating: it
+will keep its current value and won't trigger any of its
+dependents or listeners.
+* signature: **updateFunc**(*args*, *currVal*, *updateMap*, *node*)
+  * `args` is a *clean map* from the aliases of this conduit's
+  arguments (including passive arguments) to their corresponding values.
+  These are all the nodes specified via *args* and *pArgs* in *configOpts*.
+  Any argument that wasn't given an alias will use its node id as the "alias"
+  by default.
+  * `currVal` is the current value of the conduit
+  * `updateMap` is a *clean map* from aliases to nodes consisting of
+  only the arguments that triggered this conduit to update.  This will never
+  include passive arguments since passive arguments don't cause a conduit
+  to update.
+  * `node` is a reference to the conduit itself
 
 
 *Note: this library relies on ECMAScript 5 features.*
